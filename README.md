@@ -1,12 +1,5 @@
 # AI Does My Job Now presentation files
 
-## Presentation video
-
-<video controls preload="metadata" width="100%">
-  <source src="jamformer.mp4" type="video/mp4">
-  Your browser does not support embedded video. Download [the presentation video](jamformer.mp4).
-</video>
-
 ## Setup
 
 - Install [git](https://git-scm.com/install/mac)
@@ -93,4 +86,8 @@ Once you have Jamf Pro running locally, run Jamformer.
 ./jamformer
 ```
 
+<video controls preload="metadata" width="100%">
+  <source src="jamformer.mp4" type="video/mp4">
+  Your browser does not support embedded video. Download [the presentation video](jamformer.mp4).
+</video>
 
