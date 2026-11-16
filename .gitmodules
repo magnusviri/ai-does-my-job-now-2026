@@ -1,0 +1,3 @@
+[submodule "docker-jamfpro"]
+	path = docker-jamfpro
+	url = https://github.com/magnusviri/docker-jamfpro.git
