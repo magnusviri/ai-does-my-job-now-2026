@@ -1,6 +1,6 @@
 # AI Does My Job Now presentation files
 
-## Setup
+## Install and Setup
 
 - Install [git](https://git-scm.com/install/mac)
 - Install [Docker](https://www.docker.com/products/docker-desktop/)
@@ -80,6 +80,8 @@ configuration, logs, and data are persisted under `gitlab/gitlab/`.
 
 ## The Demos
 
+### Jamformer
+
 Once you have Jamf Pro running locally, run Jamformer.
 
 ```
@@ -88,5 +90,34 @@ Once you have Jamf Pro running locally, run Jamformer.
 
 [![Presentation video preview](jamformer.gif)](jamformer.mp4)
 
-Click the animated preview to open the full [presentation video](jamformer.mp4).
+Inspect your config files in the "generated" folder with an AI agent.
+
+### Terraform
+
+Add files to git.
+
+```
+git init
+git add .
+git commit -m "1st"
+```
+
+Use an AI Agent to change files.
+
+Check for changes.
+
+```
+git diff
+```
+
+Once you're done inspecting everything and you're happy with it, apply it to the server.
+
+```
+terraform apply
+```
+
+### GitLab CI/CD
+
+
+
 
