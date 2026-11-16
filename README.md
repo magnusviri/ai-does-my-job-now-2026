@@ -1,10 +1,17 @@
 # AI Does My Job Now presentation files
 
+## Presentation video
+
+<video controls preload="metadata" width="100%">
+  <source src="jamformer.mp4" type="video/mp4">
+  Your browser does not support embedded video. Download [the presentation video](jamformer.mp4).
+</video>
+
 ## Setup
 
 - Install [git](https://git-scm.com/install/mac)
 - Install [Docker](https://www.docker.com/products/docker-desktop/)
-- Install [Jamformer](https://github.com/Jamf-Concepts/jamformer)
+- Download [Jamformer](https://github.com/Jamf-Concepts/jamformer)
 - Install [Terraform](https://developer.hashicorp.com/terraform/install)
 
 ### Clone with dependencies
