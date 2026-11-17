@@ -111,7 +111,22 @@ docker compose run --rm gitlab-runner register \
 
 #### Create CI/CD pipeline
 
-Go to the [Pipeline editor](http://localhost:8929/root/jamf-repo/-/ci/editor?branch_name=main).
+Go to the [Pipeline editor](http://localhost:8929/root/jamf-repo/-/ci/editor?branch_name=main) and enter this.
+
+```
+diagnostics:
+  stage: test
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  script:
+    - 'echo "Hostname: $(hostname)"'
+    - getent hosts localhost
+    - cat /etc/os-release
+```
+
+Click "Commit changes" when done. This is just to make sure that CI/CD is working. Then go
+to [Pipelines](http://localhost:8929/root/jamf1/-/pipelines). There should be a job there
+and it should pass. If it doesn't pass, then debug it until it passes.
 
 ## The Demos
 
@@ -152,3 +167,10 @@ terraform apply
 ```
 
 ### GitLab CI/CD
+
+You need to push the "generated" repo to the GitLab server.
+
+```
+git remote add origin http://localhost:8929/root/jamf1.git
+git push --set-upstream origin main
+```
