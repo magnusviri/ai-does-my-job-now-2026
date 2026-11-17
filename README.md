@@ -58,11 +58,11 @@ To stop the services later, run `docker compose down` from `docker-jamfpro`.
 
 ### Start GitLab
 
-Start the local GitLab server from its Compose directory:
+Start the local GitLab server from its Compose directory ("gitlab"):
 
 ```sh
 cd gitlab
-docker compose up -d
+docker compose up -d gitlab
 ```
 
 GitLab may take several minutes to become available. Open
@@ -75,8 +75,43 @@ To set or reset the `root` account password after the container is running:
 docker exec -it gitlab gitlab-rake "gitlab:password:reset[root]"
 ```
 
-Stop the server with `docker compose down` from the `gitlab` directory. Its
+Stop the server with `docker compose down gitlab` from the `gitlab` directory. Its
 configuration, logs, and data are persisted under `gitlab/gitlab/`.
+
+### GitLab CI/CD
+
+You can't setup CI/CD until you have a repository. Once you have the repository set up,
+follow the following instructions.
+
+#### Create GitLab Runner
+
+Start the local GitLab server from its Compose directory ("gitlab"):
+
+```sh
+cd gitlab
+docker compose up -d gitlab-runner
+```
+
+- Go to the [Runner settings](http://localhost:8929/root/jamf1/-/settings/ci_cd#js-runners-settings).
+- Create a new project runner.
+- Check "Run untagged jobs"
+- Click "Create runner" button.
+- Copy the token (begins with "glrt-")
+- Run the following command (replacing the token with the one you copied)
+
+```
+docker compose run --rm gitlab-runner register \
+  --non-interactive \
+  --url "http://gitlab:8929" \
+  --token "glrt-..." \
+  --executor "docker" \
+  --docker-image "alpine:latest" \
+  --description "local-docker-runner"
+```
+
+#### Create CI/CD pipeline
+
+Go to the [Pipeline editor](http://localhost:8929/root/jamf-repo/-/ci/editor?branch_name=main).
 
 ## The Demos
 
@@ -117,7 +152,3 @@ terraform apply
 ```
 
 ### GitLab CI/CD
-
-
-
-
