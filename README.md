@@ -170,7 +170,22 @@ docker compose run --rm gitlab-runner register \
   --token "glrt-..." \
   --executor "docker" \
   --docker-image "alpine:latest" \
+  --docker-network-mode "gitlab-ci" \
   --description "local-docker-runner"
+```
+
+The runner's job containers must use the `gitlab-ci` Docker network. It gives
+them DNS access to the GitLab service as `gitlab`, which is also the hostname
+the coordinator returns to the runner. Do not use Docker `host` networking for
+this runner.
+
+If the runner was registered before adding `--docker-network-mode`, edit its
+`/etc/gitlab-runner/config.toml` and replace `network_mode = "host"` with
+`network_mode = "gitlab-ci"`, then restart it:
+
+```sh
+docker compose exec gitlab-runner sed -i 's/network_mode = "host"/network_mode = "gitlab-ci"/' /etc/gitlab-runner/config.toml
+docker compose restart gitlab-runner
 ```
 
 ### Test CI/CD pipeline
@@ -184,7 +199,7 @@ diagnostics:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
     - 'echo "Hostname: $(hostname)"'
-    - getent hosts localhost
+    - getent hosts gitlab
     - cat /etc/os-release
 ```
 
@@ -205,7 +220,7 @@ The variables are the location and credentials for the Jamf server. Storing them
 
 Click [Settings->CI/CD->Variables](http://localhost:8929/root/jamf/-/settings/ci_cd#js-cicd-variables-settings). Add these variables and values if you are using user credentials.
 
-	TF_VAR_jamfpro_instance_fqdn = http://localhost
+	TF_VAR_jamfpro_instance_fqdn = http://host.docker.internal
 	TF_VAR_jamfpro_basic_auth_username = jamf_username
 	TF_VAR_jamfpro_basic_auth_password = jamf_password
 
