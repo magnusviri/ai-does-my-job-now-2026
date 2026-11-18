@@ -2,6 +2,8 @@
 
 3 demos showing different levels of Terraform integration with Jamf Pro and how to use an AI agent.
 
+[Presentation slides](AI Does My Job Now.pdf)
+
 ## Install
 
 To run all of the demos you need to install all of the following on your computer and also set up a Jamf Pro server to run locally in Docker.
