@@ -19,9 +19,9 @@ variables:
 
 .terraform_http_backend:
   variables:
-    TF_HTTP_ADDRESS: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/jamfpro"
-    TF_HTTP_LOCK_ADDRESS: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/jamfpro/lock"
-    TF_HTTP_UNLOCK_ADDRESS: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/jamfpro/lock"
+    TF_HTTP_ADDRESS: "http://gitlab:8929/api/v4/projects/${CI_PROJECT_ID}/terraform/state/jamfpro"
+    TF_HTTP_LOCK_ADDRESS: "http://gitlab:8929/api/v4/projects/${CI_PROJECT_ID}/terraform/state/jamfpro/lock"
+    TF_HTTP_UNLOCK_ADDRESS: "http://gitlab:8929/api/v4/projects/${CI_PROJECT_ID}/terraform/state/jamfpro/lock"
     TF_HTTP_USERNAME: "gitlab-ci-token"
     TF_HTTP_PASSWORD: "${CI_JOB_TOKEN}"
     TF_HTTP_LOCK_METHOD: "POST"
