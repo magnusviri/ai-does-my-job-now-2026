@@ -1,0 +1,64 @@
+image:
+  name: hashicorp/terraform:1.9.8
+  entrypoint: [""]
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+    - when: never
+
+stages:
+  - validate
+  - plan
+  - deploy
+
+variables:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+.terraform_http_backend:
+  variables:
+    TF_HTTP_ADDRESS: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/jamfpro"
+    TF_HTTP_LOCK_ADDRESS: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/jamfpro/lock"
+    TF_HTTP_UNLOCK_ADDRESS: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/jamfpro/lock"
+    TF_HTTP_USERNAME: "gitlab-ci-token"
+    TF_HTTP_PASSWORD: "${CI_JOB_TOKEN}"
+    TF_HTTP_LOCK_METHOD: "POST"
+    TF_HTTP_UNLOCK_METHOD: "DELETE"
+    TF_HTTP_RETRY_WAIT_MIN: "5"
+
+terraform:validate:
+  stage: validate
+  script:
+    - terraform fmt -check
+    - terraform init -backend=false
+    - terraform validate
+
+terraform:plan:
+  extends: .terraform_http_backend
+  stage: plan
+  script:
+    - terraform init -reconfigure
+    - terraform plan -parallelism=1 -out=plan.cache
+    - terraform show -no-color plan.cache > plan.txt
+  artifacts:
+    access: developer
+    expire_in: 1 week
+    paths:
+      - plan.cache
+      - plan.txt
+
+terraform:apply:
+  extends: .terraform_http_backend
+  stage: deploy
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+  needs:
+    - job: terraform:plan
+      artifacts: true
+  when: manual
+  allow_failure: false
+  script:
+    - terraform init -reconfigure
+    - terraform apply -parallelism=1 -auto-approve plan.cache

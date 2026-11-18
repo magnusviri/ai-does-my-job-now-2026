@@ -167,6 +167,7 @@ The GitLab Runner does the compute backend work for the GitLab server. This safe
 docker compose run --rm gitlab-runner register \
   --non-interactive \
   --url "http://gitlab:8929" \
+  --clone-url "http://gitlab:8929" \
   --token "glrt-..." \
   --executor "docker" \
   --docker-image "alpine:latest" \
@@ -176,12 +177,13 @@ docker compose run --rm gitlab-runner register \
 
 The runner's job containers must use the `gitlab-ci` Docker network. It gives
 them DNS access to the GitLab service as `gitlab`, which is also the hostname
-the coordinator returns to the runner. Do not use Docker `host` networking for
-this runner.
+they must use to clone the project. Do not use Docker `host` networking for
+this runner. Re-register an existing runner with the command above after this
+change so its `config.toml` receives the `clone_url` setting.
 
 ### Test CI/CD pipeline
 
-Go to [Build->Pipeline editor](http://localhost:8929/root/jamf-repo/-/ci/editor?branch_name=main) and create your own then enter this.
+Go to [Build->Pipeline editor](http://localhost:8929/root/jamf-repo/-/ci/editor?branch_name=main) and create your own then enter this. It tests the CI/CD setup.
 
 ```
 diagnostics:
@@ -192,18 +194,11 @@ diagnostics:
     - 'echo "Hostname: $(hostname)"'
     - getent hosts gitlab
     - cat /etc/os-release
+    - nc -z -w 10 host.docker.internal 80
 ```
 
 Click "Commit changes" when done. Then go
 to [Pipelines](http://localhost:8929/root/jamf1/-/pipelines). There should be a job there and it should pass. If it doesn't pass, then debug it until it passes.
-
-### Create CI/CD Environments
-
-If you want to fully automate making changes, it is best to test those changes in test rings. The first ring will be your laptop (which you already have running). The second ring is a development Jamf server (not part of the demo). The third ring is the production Jamf server (not part of the demo).
-
-Terraform likes to save state. So in order to run Terraform on the GitLab server, we have to save it's state somewhere. We can use GitLab's Environment's feature to do this.
-
-Click [Operate->Environments](http://localhost:8929/root/jamf/-/environments). Click "New environment". Set it's name to "dev" and then click "Save". Create a "prod" environment also.
 
 ### Set up CI/CD Variables
 
@@ -219,7 +214,7 @@ TF_VAR_ variables are mapped to input variables in variables.tf.
 
 ### Run Terraform with CI/CD 
 
-I've already prepared a .gitlab-ci.yml file. Copy it from the parent directory to the generated directory and add then commit it to the repo.
+I've already prepared a .gitlab-ci.yml file. Copy it from the parent directory to the "generated" directory and add then commit it to the repo.
 
 ```
 cp ../gitlab-ci.yml .gitlab-ci.yml
@@ -228,7 +223,11 @@ git commit -m "Add terraform CI/CD"
 git push
 ```
 
-To Do
+It will run and the last step will block because it's set to only run when you manually click a button. So go to Pipelines and find it and click the button.
+
+### Set up PSSO
+
+I've included a configuration profile for PSSO and instructions. Go ahead move those into "generated" and then ask the AI Agent to use those files to set up your server with everything.
 
 ## Cleanup
 
