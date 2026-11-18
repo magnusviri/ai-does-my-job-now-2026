@@ -4,6 +4,8 @@
 
 [Presentation slides](AI%20Does%20My%20Job%20Now.pdf)
 
+![Tea Cup](tea.png)
+
 ## Install
 
 To run all of the demos you need to install all of the following on your computer and also set up a Jamf Pro server to run locally in Docker.
