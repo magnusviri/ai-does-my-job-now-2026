@@ -179,15 +179,6 @@ them DNS access to the GitLab service as `gitlab`, which is also the hostname
 the coordinator returns to the runner. Do not use Docker `host` networking for
 this runner.
 
-If the runner was registered before adding `--docker-network-mode`, edit its
-`/etc/gitlab-runner/config.toml` and replace `network_mode = "host"` with
-`network_mode = "gitlab-ci"`, then restart it:
-
-```sh
-docker compose exec gitlab-runner sed -i 's/network_mode = "host"/network_mode = "gitlab-ci"/' /etc/gitlab-runner/config.toml
-docker compose restart gitlab-runner
-```
-
 ### Test CI/CD pipeline
 
 Go to [Build->Pipeline editor](http://localhost:8929/root/jamf-repo/-/ci/editor?branch_name=main) and create your own then enter this.
