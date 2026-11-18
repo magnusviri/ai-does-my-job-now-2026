@@ -234,6 +234,6 @@ I've included a configuration profile for PSSO and instructions. Go ahead move t
 ```
 cd docker-jamfpro
 docker compose down
-cd gitlab
+../cd gitlab
 docker compose down
 ```
