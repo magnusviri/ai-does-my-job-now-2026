@@ -1,27 +1,29 @@
 # AI Does My Job Now presentation files
 
-## Install and Setup
+3 demos showing different levels of Terraform integration with Jamf Pro and how to use an AI agent.
+
+## Install
+
+To run all of the demos you need to install all of the following on your computer and also set up a Jamf Pro server to run locally in Docker.
 
 - Install [git](https://git-scm.com/install/mac)
 - Install [Docker](https://www.docker.com/products/docker-desktop/)
-- Download [Jamformer](https://github.com/Jamf-Concepts/jamformer)
+- Download [Jamformer](https://github.com/Jamf-Concepts/jamformer/releases)
 - Install [Terraform](https://developer.hashicorp.com/terraform/install)
 
-### Clone with dependencies
-
-Clone the repository and its `docker-jamfpro` submodule together:
+Clone the repository and its submodules like this:
 
 ```sh
 git clone --recurse-submodules https://github.com/magnusviri/ai-does-my-job-now-2026.git
 ```
 
-For an existing checkout, run:
+If you cloned it without getting the submodules, you can get the submodules with this command.
 
 ```sh
 git submodule update --init --recursive
 ```
 
-### Set up Jamf Pro
+### Set up Jamf Pro test server
 
 [`docker-jamfpro`](https://github.com/magnusviri/docker-jamfpro) runs a local Jamf Pro
 instance for this demo. It requires Docker, a Jamf Pro development license, and the Jamf
@@ -56,48 +58,108 @@ Pro `ROOT.war` file; the Jamf software and license are not included in this repo
 
 To stop the services later, run `docker compose down` from `docker-jamfpro`.
 
+## Demo 1: Isolate Reading with Jamformer
+
+Run Jamformer. It will ask you all the questions it needs answered. It will create a folder named "generated."
+
+```
+./jamformer
+```
+
+[![Presentation video preview](jamformer.gif)](jamformer.mp4)
+
+Inspect your config files in the "generated" folder to make sure there are no secrets or sensitive or restricted data. When you are sure that the data is safe to use with an AI agent, go ahead and start one.
+
+The first thing you probably want to do is run "/init" to create AGENTS.md or CLAUDE.md (depending on the agent you are using). Because I'm using a brand new Jamf server, there probably isn't a lot there to discuss with the AI. But a mature server would have a lot of stuff for the AI to inspect and discuss.
+
+## Demo 2: Isolate Writing with Terraform
+
+First, let's turn the "generated" directory into a git repo so we can track all the changes the AI agent makes.
+
+```
+git init
+git add .
+git commit -m "1st"
+```
+
+Use an AI Agent to change files. In a new Terminal window run your agent. In this case, I'm using codex (I also use my [agent-container](https://github.com/magnusviri/agent-container) to run it in a Docker container).
+
+```
+codex
+```
+
+This is my first prompt.
+
+```
+Add a computer policy. It should run recon once a day on all computers.
+```
+
+Check for changes in a different Terminal window.
+
+```
+git status
+git diff
+```
+
+Once you're done inspecting everything and you're happy with it apply it to the server. Jamformer already configured things so you only need to enter the password and username of the Jamf server.
+
+```
+terraform apply
+```
+
+Now when you go to the local Jamf server you should see the new policy (assuming it didn't create an error in the hcl file).
+
+Then add the changes to git.
+
+```
+git add .
+git commit -m "new policy"
+```
+
+## Demo 3: Running Terraform in GitLab's CI/CD
+
+There is quite a bit of setup for this.
+
 ### Start GitLab
 
 Start the local GitLab server from its Compose directory ("gitlab"):
 
 ```sh
 cd gitlab
-docker compose up -d gitlab
+docker compose up -d
 ```
 
 GitLab may take several minutes to become available. Open
-[http://localhost:8929](http://localhost:8929) for the web interface. Git over
-SSH is exposed on port `2424`.
+[http://localhost:8929](http://localhost:8929) for the web interface.
 
-To set or reset the `root` account password after the container is running:
+Set the `root` account password after the container is running:
 
 ```sh
 docker exec -it gitlab gitlab-rake "gitlab:password:reset[root]"
 ```
 
-Stop the server with `docker compose down gitlab` from the `gitlab` directory. Its
-configuration, logs, and data are persisted under `gitlab/gitlab/`.
+### GitLab Repo
 
-### GitLab CI/CD
+Create a new project (click the + button at the top) and call it "jamf".
 
-You can't setup CI/CD until you have a repository. Once you have the repository set up,
-follow the following instructions.
+Now upload the "generated" directory to this repo.
 
-#### Create GitLab Runner
-
-Start the local GitLab server from its Compose directory ("gitlab"):
-
-```sh
-cd gitlab
-docker compose up -d gitlab-runner
+```
+git remote add origin http://localhost:8929/root/jamf.git
+git push --set-upstream origin main
 ```
 
-- Go to the [Runner settings](http://localhost:8929/root/jamf1/-/settings/ci_cd#js-runners-settings).
-- Create a new project runner.
-- Check "Run untagged jobs"
+### Create GitLab Runner
+
+The GitLab Runner does the compute backend work for the GitLab server. This safely separates repo CI/CD code execution from the GitLab server.
+
+- Go to the "jamf" project in GitLab.
+- Click [Settings->CI/CD->Runners](http://localhost:8929/root/jamf/-/settings/ci_cd#js-runners-settings).
+- Click "Create project runner" button.
+- Check "Run untagged jobs" checkbox.
 - Click "Create runner" button.
-- Copy the token (begins with "glrt-")
-- Run the following command (replacing the token with the one you copied)
+- Copy the token (begins with "glrt-").
+- Run the following command (replacing the token with the one you copied).
 
 ```
 docker compose run --rm gitlab-runner register \
@@ -109,9 +171,9 @@ docker compose run --rm gitlab-runner register \
   --description "local-docker-runner"
 ```
 
-#### Create CI/CD pipeline
+### Test CI/CD pipeline
 
-Go to the [Pipeline editor](http://localhost:8929/root/jamf-repo/-/ci/editor?branch_name=main) and enter this.
+Go to [Build->Pipeline editor](http://localhost:8929/root/jamf-repo/-/ci/editor?branch_name=main) and create your own then enter this.
 
 ```
 diagnostics:
@@ -124,53 +186,47 @@ diagnostics:
     - cat /etc/os-release
 ```
 
-Click "Commit changes" when done. This is just to make sure that CI/CD is working. Then go
-to [Pipelines](http://localhost:8929/root/jamf1/-/pipelines). There should be a job there
-and it should pass. If it doesn't pass, then debug it until it passes.
+Click "Commit changes" when done. Then go
+to [Pipelines](http://localhost:8929/root/jamf1/-/pipelines). There should be a job there and it should pass. If it doesn't pass, then debug it until it passes.
 
-## The Demos
+### Create CI/CD Environments
 
-### Jamformer
+If you want to fully automate making changes, it is best to test those changes in test rings. The first ring will be your laptop (which you already have running). The second ring is a development Jamf server (not part of the demo). The third ring is the production Jamf server (not part of the demo).
 
-Once you have Jamf Pro running locally, run Jamformer.
+Terraform likes to save state. So in order to run Terraform on the GitLab server, we have to save it's state somewhere. We can use GitLab's Environment's feature to do this.
+
+Click [Operate->Environments](http://localhost:8929/root/jamf/-/environments). Click "New environment". Set it's name to "dev" and then click "Save". Create a "prod" environment also.
+
+### Set up CI/CD Variables
+
+The variables are the location and credentials for the Jamf server. Storing them here keeps them out of the repo and away from the AI.
+
+Click [Settings->CI/CD->Variables](http://localhost:8929/root/jamf/-/settings/ci_cd#js-cicd-variables-settings). Add these variables and values if you are using user credentials.
+
+	TF_VAR_jamfpro_instance_fqdn = http://localhost
+	TF_VAR_jamfpro_basic_auth_username = jamf_username
+	TF_VAR_jamfpro_basic_auth_password = jamf_password
+
+TF_VAR_ variables are mapped to input variables in variables.tf.
+
+### Run Terraform with CI/CD 
+
+I've already prepared a .gitlab-ci.yml file. Copy it from the parent directory to the generated directory and add then commit it to the repo.
 
 ```
-./jamformer
-```
-
-[![Presentation video preview](jamformer.gif)](jamformer.mp4)
-
-Inspect your config files in the "generated" folder with an AI agent.
-
-### Terraform
-
-Add files to git.
-
-```
-git init
+cp ../gitlab-ci.yml .gitlab-ci.yml
 git add .
-git commit -m "1st"
+git commit -m "Add terraform CI/CD"
+git push
 ```
 
-Use an AI Agent to change files.
+To Do
 
-Check for changes.
-
-```
-git diff
-```
-
-Once you're done inspecting everything and you're happy with it, apply it to the server.
+## Cleanup
 
 ```
-terraform apply
-```
-
-### GitLab CI/CD
-
-You need to push the "generated" repo to the GitLab server.
-
-```
-git remote add origin http://localhost:8929/root/jamf1.git
-git push --set-upstream origin main
+cd docker-jamfpro
+docker compose down
+cd gitlab
+docker compose down
 ```
