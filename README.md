@@ -216,7 +216,22 @@ TF_VAR_ variables are mapped to input variables in variables.tf.
 
 ### Run Terraform with CI/CD 
 
-I've already prepared a .gitlab-ci.yml file. Copy it from the parent directory to the "generated" directory and add then commit it to the repo.
+To get Terraform to save it's state in GitLab, I need to modify the provider.tf file. Add `backend "http" {}` to the `terraform` block, like so.
+
+```
+terraform {
+  backend "http" {}
+
+  required_providers {
+    jamfpro = {
+      source  = "deploymenttheory/jamfpro"
+      version = ">= 0.43.0"
+    }
+  }
+}
+```
+
+Next, I've already prepared a .gitlab-ci.yml file. Copy it from the parent directory to the "generated" directory and add then commit it to the repo.
 
 ```
 cp ../gitlab-ci.yml .gitlab-ci.yml
