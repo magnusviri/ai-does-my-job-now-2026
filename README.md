@@ -2,7 +2,7 @@
 
 3 demos showing different levels of Terraform integration with Jamf Pro and how to use an AI agent.
 
-[Presentation slides](AI Does My Job Now.pdf)
+[Presentation slides](AI%20Does%20My%20Job%20Now.pdf)
 
 ## Install
 
